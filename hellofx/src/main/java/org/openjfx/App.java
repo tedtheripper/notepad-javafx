@@ -27,10 +27,16 @@ import java.util.List;
 public class App extends Application {
 
     private static Scene scene;
+    private List<MenuItem> menuItems;
+    private Label labelAuthor;
+    private TextField textFieldAuthor;
+    private Label labelCategory;
+    private TextField textFieldCategory;
+    private TextArea textArea;
+
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        //scene = new Scene(loadFXML("primary"), 640, 480);
         primaryStage.setTitle("NoteCrash");
         primaryStage.setMinWidth(500);
         primaryStage.setMinHeight(500);
@@ -38,13 +44,13 @@ public class App extends Application {
 
         Menu menuFile = new Menu("File");
         List<String> menuNames = Arrays.asList("New", "Open", "Save", "SaveAs", "Exit");
-        List<MenuItem> menuItems = new ArrayList<>();
+        menuItems = new ArrayList<>();
         EventHandler<ActionEvent> action = new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
                 MenuItem mItem = (MenuItem) actionEvent.getSource();
                 String name = mItem.getText();
-                menuBarAction(name);
+                menuBarAction(actionEvent, name);
             }
         };
         for(var name : menuNames){
@@ -56,6 +62,7 @@ public class App extends Application {
 
         Menu menuSearch = new Menu("Search");
         MenuItem menuItemSearch = new MenuItem("search");
+        menuItems.add(menuItemSearch);
         menuItemSearch.setOnAction(action);
         menuSearch.getItems().add(menuItemSearch);
         MenuBar menuBar = new MenuBar();
@@ -67,20 +74,20 @@ public class App extends Application {
         grid.setPadding(new Insets(10, 10, 10, 10));
         grid.setHgap(5);
         grid.setVgap(5);
-        Label labelAuthor = new Label("Author: ");
-        TextField textFieldAuthor = new TextField();
+        labelAuthor = new Label("Author: ");
+        textFieldAuthor = new TextField();
         GridPane.setConstraints(labelAuthor, 0, 0);
         GridPane.setConstraints(textFieldAuthor, 1, 0);
         grid.getChildren().addAll(labelAuthor, textFieldAuthor);
-        Label labelCategory = new Label("Category: ");
-        TextField textFieldCategory = new TextField();
+        labelCategory = new Label("Category: ");
+        textFieldCategory = new TextField();
         GridPane.setConstraints(labelCategory, 0, 1);
         GridPane.setConstraints(textFieldCategory, 1, 1);
         grid.getChildren().addAll(labelCategory, textFieldCategory);
 
         GridPane grid2 = new GridPane();
         grid2.setPadding(new Insets(10, 10, 10, 10));
-        TextArea textArea = new TextArea();
+        textArea = new TextArea();
         //TextField textFieldArea = new TextField();
         GridPane.setConstraints(textArea, 0, 2);
         textArea.setPrefSize(500, 300);
@@ -97,45 +104,56 @@ public class App extends Application {
         primaryStage.show();
     }
 
-    private void menuBarAction(String name) {
+    private void menuBarAction(ActionEvent actionEvent, String name) {
         switch(name){
             case "New":
-                menuBarActionNew();
+                menuBarActionNew(actionEvent);
                 break;
             case "Load":
-                menuBarActionLoad();
+                menuBarActionLoad(actionEvent);
                 break;
             case "Save":
-                menuBarActionSave();
+                menuBarActionSave(actionEvent);
                 break;
             case "SaveAs":
-                menuBarActionSaveAs();
+                menuBarActionSaveAs(actionEvent);
                 break;
             case "Exit":
-                menuBarActionExit();
+                menuBarActionExit(actionEvent);
                 break;
             case "search":
-                menuBarActionSearch();
+                menuBarActionSearch(actionEvent);
                 break;
         }
     }
 
-    private void menuBarActionSearch() {
+    private void menuBarActionSearch(ActionEvent actionEvent) {
     }
 
-    private void menuBarActionExit() {
+    private void menuBarActionExit(ActionEvent actionEvent) {
     }
 
-    private void menuBarActionSaveAs() {
+    private void menuBarActionSaveAs(ActionEvent actionEvent) {
     }
 
-    private void menuBarActionSave() {
+    private void menuBarActionSave(ActionEvent actionEvent) {
     }
 
-    private void menuBarActionLoad() {
+    private void menuBarActionLoad(ActionEvent actionEvent) {
     }
 
-    private void menuBarActionNew() {
+    private void menuBarActionNew(ActionEvent actionEvent) {
+        if(!textFieldAuthor.getText().isEmpty() || !textFieldCategory.getText().isEmpty() || !textArea.getText().isEmpty()){
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure? Unsaved changes will be lost.");
+            alert.showAndWait().ifPresent(response -> {
+                if(response == ButtonType.OK){
+                    textFieldAuthor.clear();
+                    textFieldCategory.clear();
+                    textArea.clear();
+                }
+            });
+        }
+
     }
 
 
