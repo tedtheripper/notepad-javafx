@@ -2,28 +2,25 @@ package org.openjfx;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 
-import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * JavaFX App
@@ -32,12 +29,11 @@ public class App extends Application {
 
     private static Scene scene;
     private static Stage mainStage;
-    private List<MenuItem> menuItems;
-    private Label labelAuthor;
     private TextField textFieldAuthor;
-    private Label labelCategory;
     private TextField textFieldCategory;
     private TextArea textArea;
+    private String currOpenedPath = "";
+    private boolean cleared;
 
 
     @Override
@@ -50,7 +46,7 @@ public class App extends Application {
 
         Menu menuFile = new Menu("File");
         List<String> menuNames = Arrays.asList("New", "Open", "Save", "SaveAs", "Exit");
-        menuItems = new ArrayList<>();
+        List<MenuItem> menuItems = new ArrayList<>();
         EventHandler<ActionEvent> action = new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
@@ -65,28 +61,34 @@ public class App extends Application {
             menuItems.add(menuItem);
             menuFile.getItems().add(menuItem);
         }
+        Menu menuAbout = new Menu("About");
+        menuAbout.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
 
-        Menu menuSearch = new Menu("Search");
-        MenuItem menuItemSearch = new MenuItem("search");
-        menuItems.add(menuItemSearch);
-        menuItemSearch.setOnAction(action);
-        menuSearch.getItems().add(menuItemSearch);
+            }
+        });
+//        Menu menuSearch = new Menu("Search");
+//        MenuItem menuItemSearch = new MenuItem("search");
+//        menuItems.add(menuItemSearch);
+//        menuItemSearch.setOnAction(action);
+//        menuSearch.getItems().add(menuItemSearch);
         MenuBar menuBar = new MenuBar();
 
-        menuBar.getMenus().addAll(menuFile, menuSearch);
+        menuBar.getMenus().addAll(menuFile);
         vBox.getChildren().add(menuBar);
 
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(10, 10, 10, 10));
         grid.setHgap(5);
         grid.setVgap(5);
-        labelAuthor = new Label("Author: ");
+        Label labelAuthor = new Label("Author: ");
         textFieldAuthor = new TextField();
         textFieldAuthor.setPrefColumnCount(20);
         GridPane.setConstraints(labelAuthor, 0, 0);
         GridPane.setConstraints(textFieldAuthor, 1, 0);
         grid.getChildren().addAll(labelAuthor, textFieldAuthor);
-        labelCategory = new Label("Category: ");
+        Label labelCategory = new Label("Category: ");
         textFieldCategory = new TextField();
         textFieldCategory.setPrefColumnCount(20);
         GridPane.setConstraints(labelCategory, 0, 1);
@@ -130,9 +132,9 @@ public class App extends Application {
             case "Exit":
                 menuBarActionExit(actionEvent);
                 break;
-            case "search":
-                menuBarActionSearch(actionEvent);
-                break;
+//            case "search":
+//                menuBarActionSearch(actionEvent);
+//                break;
         }
     }
 
@@ -140,28 +142,72 @@ public class App extends Application {
         return !textFieldAuthor.getText().isEmpty() || !textFieldCategory.getText().isEmpty() || !textArea.getText().isEmpty();
     }
 
-    private void menuBarActionSearch(ActionEvent actionEvent) {
-    }
+//    private void menuBarActionSearch(ActionEvent actionEvent) {
+//    }
 
     private void menuBarActionExit(ActionEvent actionEvent) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure? Unsaved changes will be lost.");
+        alert.setHeaderText(null);
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                mainStage.close();
+            }
+        });
     }
 
     private void menuBarActionSaveAs(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        File file = fileChooser.showSaveDialog(mainStage);
+        if (!file.isFile() && file.getName().split("\\.")[1].equals("txt") && !file.isDirectory()){
+            try {
+                if(!file.createNewFile()){
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "There was an error while saving the file.");
+                    alert.setHeaderText(null);
+                    alert.showAndWait();
+                    return;
+                }
+            } catch (Exception ex){
+                System.out.println(ex.getMessage());
+            }
+        }
+        currOpenedPath = file.getPath();
+        menuBarActionSave(actionEvent);
     }
 
     private void menuBarActionSave(ActionEvent actionEvent) {
+        if(!currOpenedPath.equals("")){
+            try{
+                FileWriter fileWriter = new FileWriter(currOpenedPath);
+                fileWriter.write(textFieldAuthor.getText() + "\n");
+                fileWriter.write(textFieldCategory.getText() + "\n");
+                fileWriter.write(textArea.getText());
+                fileWriter.close();
+                File file = new File(currOpenedPath);
+                mainStage.setTitle("NoteCrash - " + file.getName());
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, "File saved.");
+                alert.setHeaderText(null);
+                alert.showAndWait();
+            } catch(Exception ex){
+                System.out.println(ex.getMessage());
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "No currently opened file.");
+            alert.setHeaderText(null);
+            alert.showAndWait();
+        }
     }
 
     private void menuBarActionLoad(ActionEvent actionEvent) {
-        clearTextFields();
-        loadFileDataIntoApp();
+        if(clearTextFields()){
+            loadFileDataIntoApp();
+        }
     }
 
     private void loadFileDataIntoApp() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open text file");
         File file = fileChooser.showOpenDialog(mainStage);
-        if(file != null && file.canRead() && file.canRead() && file.getName().split("\\.")[1].equals("txt")){
+        if(file != null && file.canRead() && file.canRead() && file.getName().matches(".\\.txt")){
             try {
                 mainStage.setTitle("NoteCrash - " + file.getName());
                 Scanner scanner = new Scanner(file);
@@ -175,6 +221,7 @@ public class App extends Application {
                 textFieldAuthor.setText(author);
                 textFieldCategory.setText(category);
                 textArea.setText(data.toString());
+                currOpenedPath = file.getPath();
             }catch (IOException ex){
                 System.out.println(ex.getMessage());
             }
@@ -187,9 +234,11 @@ public class App extends Application {
 
     private void menuBarActionNew(ActionEvent actionEvent) {
         clearTextFields();
+        currOpenedPath = "";
     }
 
-    private void clearTextFields() {
+    private boolean clearTextFields() {
+        AtomicBoolean clrd = new AtomicBoolean(false);
         if(textFieldsNotEmpty()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure? Unsaved changes will be lost.");
             alert.setHeaderText(null);
@@ -198,9 +247,14 @@ public class App extends Application {
                     textFieldAuthor.clear();
                     textFieldCategory.clear();
                     textArea.clear();
+                    mainStage.setTitle("NoteCrash");
+                    clrd.set(true);
+                } else {
+                    clrd.set(false);
                 }
             });
         }
+        return clrd.get();
     }
 
 
