@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -11,7 +12,6 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.layout.VBox;
-import javafx.stage.Window;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -33,7 +33,6 @@ public class App extends Application {
     private TextField textFieldCategory;
     private TextArea textArea;
     private String currOpenedPath = "";
-    private boolean cleared;
 
 
     @Override
@@ -62,12 +61,16 @@ public class App extends Application {
             menuFile.getItems().add(menuItem);
         }
         Menu menuAbout = new Menu("About");
-        menuAbout.setOnAction(new EventHandler<ActionEvent>() {
+        MenuItem menuItemAbout = new MenuItem("About");
+        menuItemAbout.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, "NoteCrash - simple text editor");
+                alert.setHeaderText(null);
+                alert.showAndWait();
             }
         });
+        menuAbout.getItems().add(menuItemAbout);
 //        Menu menuSearch = new Menu("Search");
 //        MenuItem menuItemSearch = new MenuItem("search");
 //        menuItems.add(menuItemSearch);
@@ -75,7 +78,7 @@ public class App extends Application {
 //        menuSearch.getItems().add(menuItemSearch);
         MenuBar menuBar = new MenuBar();
 
-        menuBar.getMenus().addAll(menuFile);
+        menuBar.getMenus().addAll(menuFile, menuAbout);
         vBox.getChildren().add(menuBar);
 
         GridPane grid = new GridPane();
