@@ -145,8 +145,6 @@ public class App extends Application {
         return !textFieldAuthor.getText().isEmpty() || !textFieldCategory.getText().isEmpty() || !textArea.getText().isEmpty();
     }
 
-//    private void menuBarActionSearch(ActionEvent actionEvent) {
-//    }
 
     private void menuBarActionExit(ActionEvent actionEvent) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure? Unsaved changes will be lost.");
